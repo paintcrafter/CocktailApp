@@ -174,11 +174,11 @@ private fun CocktailDetailsContent(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    text = "Recipe",
+                    text = "Instructions",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.SemiBold
                 )
-                Text(cocktail.instructions ?: "No recipe")
+                Text(cocktail.instructions ?: "No instructions")
             }
         }
     }
