@@ -12,13 +12,13 @@ sealed class BottomNavItem(
 ) {
     data object Cocktails : BottomNavItem(
         route = "cocktail_list",
-        title = "Koktajle",
+        title = "Cocktails",
         icon = Icons.Default.LocalBar
     )
 
     data object Ingredients : BottomNavItem(
         route = "ingredient_list",
-        title = "Składniki",
+        title = "Ingredients",
         icon = Icons.Default.MenuBook
     )
 }

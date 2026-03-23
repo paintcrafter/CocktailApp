@@ -10,6 +10,10 @@ import kotlinx.coroutines.launch
 import pl.solvro.cocktails.data.model.Cocktail
 import pl.solvro.cocktails.data.repository.CocktailRepository
 
+enum class AlcoholFilter {
+    ALL, ALCOHOLIC, NON_ALCOHOLIC
+}
+
 class CocktailListViewModel(
     private val repository: CocktailRepository
 ) : ViewModel() {
@@ -20,7 +24,19 @@ class CocktailListViewModel(
     var query by mutableStateOf("")
         private set
 
+    var selectedCategory by mutableStateOf("All")
+        private set
+
+    var alcoholFilter by mutableStateOf(AlcoholFilter.ALL)
+        private set
+
     private var allCocktails: List<Cocktail> = emptyList()
+
+    val categories: List<String>
+        get() = listOf("All") + allCocktails
+            .mapNotNull { it.category?.takeIf(String::isNotBlank) }
+            .distinct()
+            .sorted()
 
     init {
         loadCocktails()
@@ -28,10 +44,30 @@ class CocktailListViewModel(
 
     fun onQueryChange(newQuery: String) {
         query = newQuery
-        filterCocktails()
+        applyFilters()
+    }
+
+    fun onCategoryChange(category: String) {
+        selectedCategory = category
+        applyFilters()
+    }
+
+    fun onAlcoholFilterChange(filter: AlcoholFilter) {
+        alcoholFilter = filter
+        applyFilters()
+    }
+
+    fun resetFilters() {
+        query = ""
+        selectedCategory = "All"
+        alcoholFilter = AlcoholFilter.ALL
+        applyFilters()
     }
 
     fun refresh() {
+        query = ""
+        selectedCategory = "All"
+        alcoholFilter = AlcoholFilter.ALL
         loadCocktails()
     }
 
@@ -40,25 +76,32 @@ class CocktailListViewModel(
         viewModelScope.launch {
             uiState = try {
                 allCocktails = repository.getCocktails()
-                UiState.Success(filterByQuery(allCocktails, query))
+                UiState.Success(filterCocktails(allCocktails))
             } catch (e: Exception) {
-                UiState.Error(e.message ?: "Nie udało się pobrać koktajli")
+                UiState.Error(e.message ?: "ERROR! REFRESH!")
             }
         }
     }
 
-    private fun filterCocktails() {
-        uiState = UiState.Success(filterByQuery(allCocktails, query))
+    private fun applyFilters() {
+        uiState = UiState.Success(filterCocktails(allCocktails))
     }
 
-    private fun filterByQuery(
-        cocktails: List<Cocktail>,
-        query: String
-    ): List<Cocktail> {
-        if (query.isBlank()) return cocktails
+    private fun filterCocktails(cocktails: List<Cocktail>): List<Cocktail> {
+        return cocktails.filter { cocktail ->
+            val matchesQuery = query.isBlank() ||
+                    cocktail.name.contains(query.trim(), ignoreCase = true)
 
-        return cocktails.filter {
-            it.name.contains(query.trim(), ignoreCase = true)
+            val matchesCategory = selectedCategory == "All" ||
+                    cocktail.category == selectedCategory
+
+            val matchesAlcohol = when (alcoholFilter) {
+                AlcoholFilter.ALL -> true
+                AlcoholFilter.ALCOHOLIC -> cocktail.alcoholic
+                AlcoholFilter.NON_ALCOHOLIC -> !cocktail.alcoholic
+            }
+
+            matchesQuery && matchesCategory && matchesAlcohol
         }
     }
 

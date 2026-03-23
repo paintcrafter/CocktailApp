@@ -20,7 +20,19 @@ class IngredientListViewModel(
     var query by mutableStateOf("")
         private set
 
+    var selectedType by mutableStateOf("All")
+        private set
+
+    var alcoholFilter by mutableStateOf(AlcoholFilter.ALL)
+        private set
+
     private var allIngredients: List<Ingredient> = emptyList()
+
+    val ingredientTypes: List<String>
+        get() = listOf("All") + allIngredients
+            .mapNotNull { it.type?.takeIf(String::isNotBlank) }
+            .distinct()
+            .sorted()
 
     init {
         loadIngredients()
@@ -28,10 +40,30 @@ class IngredientListViewModel(
 
     fun onQueryChange(newQuery: String) {
         query = newQuery
-        filterIngredients()
+        applyFilters()
+    }
+
+    fun onTypeChange(type: String) {
+        selectedType = type
+        applyFilters()
+    }
+
+    fun onAlcoholFilterChange(filter: AlcoholFilter) {
+        alcoholFilter = filter
+        applyFilters()
+    }
+
+    fun resetFilters() {
+        query = ""
+        selectedType = "All"
+        alcoholFilter = AlcoholFilter.ALL
+        applyFilters()
     }
 
     fun refresh() {
+        query = ""
+        selectedType = "All"
+        alcoholFilter = AlcoholFilter.ALL
         repository.clearIngredientCache()
         loadIngredients(forceRefresh = true)
     }
@@ -41,26 +73,32 @@ class IngredientListViewModel(
         viewModelScope.launch {
             uiState = try {
                 allIngredients = repository.getIngredientsWithImage(forceRefresh)
-                val filtered = filterByQuery(allIngredients, query)
-                UiState.Success(filtered)
+                UiState.Success(filterIngredients(allIngredients))
             } catch (e: Exception) {
-                UiState.Error(e.message ?: "Nie udało się pobrać składników")
+                UiState.Error(e.message ?: "ERROR! REFRESH!")
             }
         }
     }
 
-    private fun filterIngredients() {
-        uiState = UiState.Success(filterByQuery(allIngredients, query))
+    private fun applyFilters() {
+        uiState = UiState.Success(filterIngredients(allIngredients))
     }
 
-    private fun filterByQuery(
-        ingredients: List<Ingredient>,
-        query: String
-    ): List<Ingredient> {
-        if (query.isBlank()) return ingredients
+    private fun filterIngredients(ingredients: List<Ingredient>): List<Ingredient> {
+        return ingredients.filter { ingredient ->
+            val matchesQuery = query.isBlank() ||
+                    ingredient.name.contains(query.trim(), ignoreCase = true)
 
-        return ingredients.filter {
-            it.name.contains(query.trim(), ignoreCase = true)
+            val matchesType = selectedType == "All" ||
+                    ingredient.type == selectedType
+
+            val matchesAlcohol = when (alcoholFilter) {
+                AlcoholFilter.ALL -> true
+                AlcoholFilter.ALCOHOLIC -> ingredient.alcohol == true
+                AlcoholFilter.NON_ALCOHOLIC -> ingredient.alcohol == false
+            }
+
+            matchesQuery && matchesType && matchesAlcohol
         }
     }
 

@@ -29,6 +29,9 @@ import pl.solvro.cocktails.viewmodel.IngredientListViewModel
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
+
 
 sealed class Destinations(val route: String) {
     data object CocktailList : Destinations("cocktail_list")
@@ -48,6 +51,14 @@ fun CocktailAppNavHost(
 ) {
     val navController = rememberNavController()
     val repository = CocktailRepository(NetworkModule.apiService)
+
+    val cocktailListViewModel: CocktailListViewModel = viewModel(
+        factory = CocktailListViewModel.factory(repository)
+    )
+
+    val ingredientListViewModel: IngredientListViewModel = viewModel(
+        factory = IngredientListViewModel.factory(repository)
+    )
 
     val bottomNavItems = listOf(
         BottomNavItem.Cocktails,
@@ -73,6 +84,15 @@ fun CocktailAppNavHost(
                         NavigationBarItem(
                             selected = selected,
                             onClick = {
+                                when (item.route) {
+                                    Destinations.CocktailList.route -> {
+                                        cocktailListViewModel.resetFilters()
+                                    }
+                                    Destinations.IngredientList.route -> {
+                                        ingredientListViewModel.resetFilters()
+                                    }
+                                }
+
                                 navController.navigate(item.route) {
                                     popUpTo(navController.graph.startDestinationId) {
                                         saveState = true
@@ -106,12 +126,8 @@ fun CocktailAppNavHost(
                 startDestination = Destinations.CocktailList.route
             ) {
                 composable(Destinations.CocktailList.route) {
-                    val viewModel: CocktailListViewModel = viewModel(
-                        factory = CocktailListViewModel.factory(repository)
-                    )
-
                     CocktailListScreen(
-                        viewModel = viewModel,
+                        viewModel = cocktailListViewModel,
                         onCocktailClick = { cocktailId ->
                             navController.navigate(
                                 Destinations.CocktailDetails.createRoute(cocktailId)
@@ -138,12 +154,8 @@ fun CocktailAppNavHost(
                 }
 
                 composable(Destinations.IngredientList.route) {
-                    val viewModel: IngredientListViewModel = viewModel(
-                        factory = IngredientListViewModel.factory(repository)
-                    )
-
                     IngredientListScreen(
-                        viewModel = viewModel,
+                        viewModel = ingredientListViewModel,
                         onIngredientClick = { ingredientId ->
                             navController.navigate(
                                 Destinations.IngredientDetails.createRoute(ingredientId)
