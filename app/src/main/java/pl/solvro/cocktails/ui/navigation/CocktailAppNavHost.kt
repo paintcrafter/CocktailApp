@@ -27,6 +27,8 @@ import pl.solvro.cocktails.viewmodel.CocktailListViewModel
 import pl.solvro.cocktails.viewmodel.IngredientDetailsViewModel
 import pl.solvro.cocktails.viewmodel.IngredientListViewModel
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 
 sealed class Destinations(val route: String) {
     data object CocktailList : Destinations("cocktail_list")
@@ -94,71 +96,78 @@ fun CocktailAppNavHost(
             }
         }
     ) { innerPadding ->
-        NavHost(
-            navController = navController,
-            startDestination = Destinations.CocktailList.route,
-            modifier = Modifier.padding(innerPadding),
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
         ) {
-            composable(Destinations.CocktailList.route) {
-                val viewModel: CocktailListViewModel = viewModel(
-                    factory = CocktailListViewModel.factory(repository)
-                )
+            NavHost(
+                navController = navController,
+                startDestination = Destinations.CocktailList.route
+            ) {
+                composable(Destinations.CocktailList.route) {
+                    val viewModel: CocktailListViewModel = viewModel(
+                        factory = CocktailListViewModel.factory(repository)
+                    )
 
-                CocktailListScreen(
-                    viewModel = viewModel,
-                    onCocktailClick = { cocktailId ->
-                        navController.navigate(
-                            Destinations.CocktailDetails.createRoute(cocktailId)
-                        )
-                    }
-                )
-            }
+                    CocktailListScreen(
+                        viewModel = viewModel,
+                        onCocktailClick = { cocktailId ->
+                            navController.navigate(
+                                Destinations.CocktailDetails.createRoute(cocktailId)
+                            )
+                        }
+                    )
+                }
 
-            composable(
-                route = Destinations.CocktailDetails.route,
-                arguments = listOf(navArgument("cocktailId") { type = NavType.IntType })
-            ) { backStackEntry ->
-                val cocktailId = backStackEntry.arguments?.getInt("cocktailId") ?: return@composable
+                composable(
+                    route = Destinations.CocktailDetails.route,
+                    arguments = listOf(navArgument("cocktailId") { type = NavType.IntType })
+                ) { backStackEntry ->
+                    val cocktailId =
+                        backStackEntry.arguments?.getInt("cocktailId") ?: return@composable
 
-                val viewModel: CocktailDetailsViewModel = viewModel(
-                    factory = CocktailDetailsViewModel.factory(repository, cocktailId)
-                )
+                    val viewModel: CocktailDetailsViewModel = viewModel(
+                        factory = CocktailDetailsViewModel.factory(repository, cocktailId)
+                    )
 
-                CocktailDetailsScreen(
-                    viewModel = viewModel,
-                    onBackClick = { navController.popBackStack() }
-                )
-            }
+                    CocktailDetailsScreen(
+                        viewModel = viewModel,
+                        onBackClick = { navController.popBackStack() }
+                    )
+                }
 
-            composable(Destinations.IngredientList.route) {
-                val viewModel: IngredientListViewModel = viewModel(
-                    factory = IngredientListViewModel.factory(repository)
-                )
+                composable(Destinations.IngredientList.route) {
+                    val viewModel: IngredientListViewModel = viewModel(
+                        factory = IngredientListViewModel.factory(repository)
+                    )
 
-                IngredientListScreen(
-                    viewModel = viewModel,
-                    onIngredientClick = { ingredientId ->
-                        navController.navigate(
-                            Destinations.IngredientDetails.createRoute(ingredientId)
-                        )
-                    }
-                )
-            }
+                    IngredientListScreen(
+                        viewModel = viewModel,
+                        onIngredientClick = { ingredientId ->
+                            navController.navigate(
+                                Destinations.IngredientDetails.createRoute(ingredientId)
+                            )
+                        }
+                    )
+                }
 
-            composable(
-                route = Destinations.IngredientDetails.route,
-                arguments = listOf(navArgument("ingredientId") { type = NavType.IntType })
-            ) { backStackEntry ->
-                val ingredientId = backStackEntry.arguments?.getInt("ingredientId") ?: return@composable
+                composable(
+                    route = Destinations.IngredientDetails.route,
+                    arguments = listOf(navArgument("ingredientId") { type = NavType.IntType })
+                ) { backStackEntry ->
+                    val ingredientId =
+                        backStackEntry.arguments?.getInt("ingredientId") ?: return@composable
 
-                val viewModel: IngredientDetailsViewModel = viewModel(
-                    factory = IngredientDetailsViewModel.factory(repository, ingredientId)
-                )
+                    val viewModel: IngredientDetailsViewModel = viewModel(
+                        factory = IngredientDetailsViewModel.factory(repository, ingredientId)
+                    )
 
-                IngredientDetailsScreen(
-                    viewModel = viewModel,
-                    onBackClick = { navController.popBackStack() }
-                )
+                    IngredientDetailsScreen(
+                        viewModel = viewModel,
+                        onBackClick = { navController.popBackStack() }
+                    )
+                }
             }
         }
     }
