@@ -32,7 +32,7 @@ class CocktailDetailsViewModel(
             uiState = try {
                 UiState.Success(repository.getCocktailDetails(cocktailId))
             } catch (exception: Exception) {
-                UiState.Error(exception.message ?: "Nie udało się pobrać szczegółów drinka.")
+                UiState.Error(exception.message ?: "ERROR! REFRESH!")
             }
         }
     }

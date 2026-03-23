@@ -6,8 +6,6 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import pl.solvro.cocktails.data.model.Cocktail
 import pl.solvro.cocktails.data.repository.CocktailRepository
@@ -16,39 +14,51 @@ class CocktailListViewModel(
     private val repository: CocktailRepository
 ) : ViewModel() {
 
-    var uiState by mutableStateOf<UiState<List<Cocktail>>>(UiState.Loading)
+    var uiState: UiState<List<Cocktail>> by mutableStateOf(UiState.Loading)
         private set
 
     var query by mutableStateOf("")
         private set
 
-    private var searchJob: Job? = null
+    private var allCocktails: List<Cocktail> = emptyList()
 
     init {
-        fetchCocktails()
+        loadCocktails()
     }
 
-    fun onQueryChange(newValue: String) {
-        query = newValue
-        searchJob?.cancel()
-        searchJob = viewModelScope.launch {
-            delay(350)
-            fetchCocktails()
-        }
+    fun onQueryChange(newQuery: String) {
+        query = newQuery
+        filterCocktails()
     }
 
     fun refresh() {
-        fetchCocktails()
+        loadCocktails()
     }
 
-    private fun fetchCocktails() {
+    private fun loadCocktails() {
+        uiState = UiState.Loading
         viewModelScope.launch {
-            uiState = UiState.Loading
             uiState = try {
-                UiState.Success(repository.getCocktails(query))
-            } catch (exception: Exception) {
-                UiState.Error(exception.message ?: "Nie udało się pobrać listy koktajli.")
+                allCocktails = repository.getCocktails()
+                UiState.Success(filterByQuery(allCocktails, query))
+            } catch (e: Exception) {
+                UiState.Error(e.message ?: "Nie udało się pobrać koktajli")
             }
+        }
+    }
+
+    private fun filterCocktails() {
+        uiState = UiState.Success(filterByQuery(allCocktails, query))
+    }
+
+    private fun filterByQuery(
+        cocktails: List<Cocktail>,
+        query: String
+    ): List<Cocktail> {
+        if (query.isBlank()) return cocktails
+
+        return cocktails.filter {
+            it.name.contains(query.trim(), ignoreCase = true)
         }
     }
 
