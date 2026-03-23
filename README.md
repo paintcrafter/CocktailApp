@@ -4,4 +4,5 @@ Aplikacja zawiera:
 - listę koktajli oraz składników;
 - wyszukiwanie;
 - filtrację;
-- odświeżanie.
+- odświeżanie;
+- ustawianie trybu jasnego/ciemnego
