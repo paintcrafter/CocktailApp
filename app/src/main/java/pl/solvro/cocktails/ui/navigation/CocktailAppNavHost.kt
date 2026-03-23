@@ -29,8 +29,8 @@ import pl.solvro.cocktails.viewmodel.IngredientListViewModel
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.viewmodel.compose.viewModel
+import pl.solvro.cocktails.ui.screens.SettingsScreen
+import pl.solvro.cocktails.viewmodel.ThemeViewModel
 
 
 sealed class Destinations(val route: String) {
@@ -43,10 +43,12 @@ sealed class Destinations(val route: String) {
     data object IngredientDetails : Destinations("ingredient_details/{ingredientId}") {
         fun createRoute(ingredientId: Int) = "ingredient_details/$ingredientId"
     }
+    data object Settings : Destinations("settings")
 }
 
 @Composable
 fun CocktailAppNavHost(
+    themeViewModel: ThemeViewModel,
     modifier: Modifier = Modifier
 ) {
     val navController = rememberNavController()
@@ -125,6 +127,13 @@ fun CocktailAppNavHost(
                 navController = navController,
                 startDestination = Destinations.CocktailList.route
             ) {
+                composable(Destinations.Settings.route) {
+                    SettingsScreen(
+                        themeViewModel = themeViewModel,
+                        onBackClick = { navController.popBackStack() }
+                    )
+                }
+
                 composable(Destinations.CocktailList.route) {
                     CocktailListScreen(
                         viewModel = cocktailListViewModel,
@@ -132,6 +141,9 @@ fun CocktailAppNavHost(
                             navController.navigate(
                                 Destinations.CocktailDetails.createRoute(cocktailId)
                             )
+                        },
+                        onThemeClick = {
+                            navController.navigate(Destinations.Settings.route)
                         }
                     )
                 }
@@ -160,6 +172,9 @@ fun CocktailAppNavHost(
                             navController.navigate(
                                 Destinations.IngredientDetails.createRoute(ingredientId)
                             )
+                        },
+                        onThemeClick = {
+                            navController.navigate(Destinations.Settings.route)
                         }
                     )
                 }

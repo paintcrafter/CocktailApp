@@ -38,18 +38,28 @@ import pl.solvro.cocktails.ui.components.IngredientCard
 import pl.solvro.cocktails.viewmodel.AlcoholFilter
 import pl.solvro.cocktails.viewmodel.IngredientListViewModel
 import pl.solvro.cocktails.viewmodel.UiState
-
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material3.CenterAlignedTopAppBar
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun IngredientListScreen(
     viewModel: IngredientListViewModel,
-    onIngredientClick: (Int) -> Unit
+    onIngredientClick: (Int) -> Unit,
+    onThemeClick: () -> Unit
 ) {
     Scaffold(
         topBar = {
-            TopAppBar(
+            CenterAlignedTopAppBar(
                 title = { Text("Solvro Ingredient List") },
+                navigationIcon = {
+                    FilledTonalIconButton(onClick = onThemeClick) {
+                        Icon(
+                            imageVector = Icons.Default.Palette,
+                            contentDescription = "Mode"
+                        )
+                    }
+                },
                 actions = {
                     FilledTonalIconButton(onClick = viewModel::refresh) {
                         Icon(Icons.Default.Refresh, contentDescription = "Refresh")
