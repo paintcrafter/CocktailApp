@@ -63,7 +63,7 @@ fun CocktailListScreen(
                 },
                 actions = {
                     FilledTonalIconButton(onClick = viewModel::refresh) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Odśwież")
+                        Icon(Icons.Default.Refresh, contentDescription = "Refresh")
                     }
                 }
             )
@@ -156,6 +156,21 @@ fun CocktailListScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
+
+                        FilterChip(
+                            selected = viewModel.favoritesOnly,
+                            onClick = { viewModel.toggleFavoritesFilter() },
+                            label = { Text("Liked") }
+                        )
+                    }
+
+                    FlowRow(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
                         FilterChip(
                             selected = viewModel.alcoholFilter == AlcoholFilter.ALL,
                             onClick = { viewModel.onAlcoholFilterChange(AlcoholFilter.ALL) },
@@ -183,6 +198,8 @@ fun CocktailListScreen(
                         items(state.data, key = { it.id }) { cocktail ->
                             CocktailCard(
                                 cocktail = cocktail,
+                                isFavorite = viewModel.isFavorite(cocktail.id),
+                                onFavoriteClick = { viewModel.toggleFavorite(cocktail.id) },
                                 onClick = { onCocktailClick(cocktail.id) }
                             )
                         }

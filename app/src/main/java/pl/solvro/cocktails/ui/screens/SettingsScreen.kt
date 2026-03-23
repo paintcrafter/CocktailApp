@@ -30,12 +30,12 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Ustawienia motywu") },
+                title = { Text("Mode settings") },
                 navigationIcon = {
                     FilledTonalIconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Wróć"
+                            contentDescription = "Back"
                         )
                     }
                 }
@@ -49,7 +49,7 @@ fun SettingsScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text("Wybierz motyw aplikacji")
+            Text("Choose mode")
 
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -58,19 +58,19 @@ fun SettingsScreen(
                 FilterChip(
                     selected = themeViewModel.themeMode == ThemeMode.SYSTEM,
                     onClick = { themeViewModel.changeThemeMode(ThemeMode.SYSTEM) },
-                    label = { Text("Systemowy") }
+                    label = { Text("system") }
                 )
 
                 FilterChip(
                     selected = themeViewModel.themeMode == ThemeMode.LIGHT,
                     onClick = { themeViewModel.changeThemeMode(ThemeMode.LIGHT) },
-                    label = { Text("Jasny") }
+                    label = { Text("light") }
                 )
 
                 FilterChip(
                     selected = themeViewModel.themeMode == ThemeMode.DARK,
                     onClick = { themeViewModel.changeThemeMode(ThemeMode.DARK) },
-                    label = { Text("Ciemny") }
+                    label = { Text("dark") }
                 )
             }
         }

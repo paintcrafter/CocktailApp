@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
+import pl.solvro.cocktails.data.CocktailFavoritesManager
 import pl.solvro.cocktails.data.model.Cocktail
 import pl.solvro.cocktails.data.repository.CocktailRepository
 
@@ -14,8 +15,10 @@ enum class AlcoholFilter {
     ALL, ALCOHOLIC, NON_ALCOHOLIC
 }
 
+
 class CocktailListViewModel(
-    private val repository: CocktailRepository
+    private val repository: CocktailRepository,
+    private val favoritesManager: CocktailFavoritesManager
 ) : ViewModel() {
 
     var uiState: UiState<List<Cocktail>> by mutableStateOf(UiState.Loading)
@@ -30,6 +33,11 @@ class CocktailListViewModel(
     var alcoholFilter by mutableStateOf(AlcoholFilter.ALL)
         private set
 
+    var favoritesOnly by mutableStateOf(false)
+        private set
+    var favoriteIds by mutableStateOf(setOf<Int>())
+        private set
+
     private var allCocktails: List<Cocktail> = emptyList()
 
     val categories: List<String>
@@ -39,6 +47,7 @@ class CocktailListViewModel(
             .sorted()
 
     init {
+        favoriteIds = favoritesManager.getFavorites()
         loadCocktails()
     }
 
@@ -57,10 +66,26 @@ class CocktailListViewModel(
         applyFilters()
     }
 
+    fun toggleFavoritesFilter() {
+        favoritesOnly = !favoritesOnly
+        applyFilters()
+    }
+
+    fun toggleFavorite(cocktailId: Int) {
+        favoritesManager.toggleFavorite(cocktailId)
+        favoriteIds = favoritesManager.getFavorites()
+        applyFilters()
+    }
+
+    fun isFavorite(cocktailId: Int): Boolean {
+        return favoriteIds.contains(cocktailId)
+    }
+
     fun resetFilters() {
         query = ""
         selectedCategory = "All"
         alcoholFilter = AlcoholFilter.ALL
+        favoritesOnly = false
         applyFilters()
     }
 
@@ -68,6 +93,7 @@ class CocktailListViewModel(
         query = ""
         selectedCategory = "All"
         alcoholFilter = AlcoholFilter.ALL
+        favoritesOnly = false
         loadCocktails()
     }
 
@@ -75,6 +101,7 @@ class CocktailListViewModel(
         uiState = UiState.Loading
         viewModelScope.launch {
             uiState = try {
+                favoriteIds = favoritesManager.getFavorites()
                 allCocktails = repository.getCocktails()
                 UiState.Success(filterCocktails(allCocktails))
             } catch (e: Exception) {
@@ -88,6 +115,10 @@ class CocktailListViewModel(
     }
 
     private fun filterCocktails(cocktails: List<Cocktail>): List<Cocktail> {
+        if (favoritesOnly) {
+            return cocktails.filter { favoriteIds.contains(it.id) }
+        }
+
         return cocktails.filter { cocktail ->
             val matchesQuery = query.isBlank() ||
                     cocktail.name.contains(query.trim(), ignoreCase = true)
@@ -106,11 +137,14 @@ class CocktailListViewModel(
     }
 
     companion object {
-        fun factory(repository: CocktailRepository): ViewModelProvider.Factory =
+        fun factory(
+            repository: CocktailRepository,
+            favoritesManager: CocktailFavoritesManager
+        ): ViewModelProvider.Factory =
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                    return CocktailListViewModel(repository) as T
+                    return CocktailListViewModel(repository, favoritesManager) as T
                 }
             }
     }

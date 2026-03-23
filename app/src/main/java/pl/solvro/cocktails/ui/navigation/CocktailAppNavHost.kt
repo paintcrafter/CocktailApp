@@ -31,6 +31,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import pl.solvro.cocktails.ui.screens.SettingsScreen
 import pl.solvro.cocktails.viewmodel.ThemeViewModel
+import androidx.compose.ui.platform.LocalContext
+import pl.solvro.cocktails.data.CocktailFavoritesManager
 
 
 sealed class Destinations(val route: String) {
@@ -53,9 +55,11 @@ fun CocktailAppNavHost(
 ) {
     val navController = rememberNavController()
     val repository = CocktailRepository(NetworkModule.apiService)
+    val context = LocalContext.current
+    val cocktailFavoritesManager = CocktailFavoritesManager(context)
 
     val cocktailListViewModel: CocktailListViewModel = viewModel(
-        factory = CocktailListViewModel.factory(repository)
+        factory = CocktailListViewModel.factory(repository, cocktailFavoritesManager)
     )
 
     val ingredientListViewModel: IngredientListViewModel = viewModel(
